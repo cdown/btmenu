@@ -1,0 +1,74 @@
+#!/bin/bash
+
+_bluetoothctl() {
+    timeout 30 bluetoothctl
+}
+
+mode=connect
+
+# Name -> MAC
+declare -A DEVICES
+while read -r _ mac name; do
+    DEVICES["$name"]=$mac
+done < <(echo "devices" | _bluetoothctl | awk '$1 == "Device"')
+
+notify() {
+    local msg
+    local is_error
+
+    msg=${1?BUG: no message}
+    is_error=${2:-0}
+
+    command -v notify-send >/dev/null 2>&1 || return
+
+    notify-send "btmenu" "$msg"  # TODO: escaping
+
+    if (( is_error )); then
+        printf 'ERROR: %s\n' "$msg" >&2
+    else
+        printf '%s\n' "$msg"
+    fi
+}
+
+execute_mode() {
+    local mode
+    local name
+    local mac
+    local preposition
+
+    mode=${1?BUG: missing mode}
+
+    case $mode in
+        connect) preposition=to ;;
+        disconnect) preposition=from ;;
+    esac
+
+    name=$(printf '%s\n' "${!DEVICES[@]}" | dmenu -p "btmenu" "${dmenu_args[@]}")
+    [[ $name ]] || return
+    mac=${DEVICES["$name"]}
+
+    if printf 'power on\n%s %s\n' "$mode" "$mac" | _bluetoothctl; then
+        notify "${mode^}ed $preposition $name"
+    else
+        ret="$?"
+        notify "Failed to $mode $preposition $name" 1
+        return "$ret"
+    fi
+}
+
+i=2
+
+for arg do
+    if [[ $arg == :: ]]; then
+        dmenu_args=( "${@:$i}" )
+        break
+    fi
+
+    case "$arg" in
+        -d) mode=disconnect ;;
+    esac
+
+    (( i++ ))
+done
+
+execute_mode "$mode"
