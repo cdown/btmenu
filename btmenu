@@ -43,6 +43,11 @@ execute_mode() {
         disconnect) preposition=from ;;
     esac
 
+    if ! (( ${#DEVICES[@]} )); then
+        notify "No devices found. Are they registered with D-Bus?" 1
+        return 2
+    fi
+
     name=$(printf '%s\n' "${!DEVICES[@]}" | dmenu -p "btmenu" "${dmenu_args[@]}")
     [[ $name ]] || return
     mac=${DEVICES["$name"]}
