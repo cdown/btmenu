@@ -74,7 +74,7 @@ execute_mode() {
     while (( retries-- )); do
         if printf 'info %s\n' |
             _bluetoothctl |
-            grep -q '^[\t ]\+Connected: '"$expected_to_connect"; then
+            grep -Pq '^[\t ]+Connected: '"$expected_to_connect"; then
             notify "${mode^}ed $preposition $name"
             return 0
         fi
