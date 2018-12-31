@@ -72,7 +72,7 @@ execute_mode() {
     notify "Attempting to $mode $preposition $name"
 
     while (( retries-- )); do
-        if printf 'info %s\n' |
+        if printf 'info %s\n' "$mac" |
             _bluetoothctl |
             grep -Pq '^[\t ]+Connected: '"$expected_to_connect"; then
             notify "${mode^}ed $preposition $name"
