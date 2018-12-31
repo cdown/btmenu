@@ -39,7 +39,7 @@ execute_mode() {
     local retries
 
     mode=${1?BUG: missing mode}
-    retries=5
+    retries=15
 
     case $mode in
         connect)
