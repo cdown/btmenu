@@ -61,17 +61,10 @@ execute_mode() {
     [[ $name ]] || return
     mac=${DEVICES["$name"]}
 
-    if ! printf 'power on\n%s %s\n' "$mode" "$mac" | _bluetoothctl; then
-        # Usually we fail later when the timeout is reached, but this means
-        # something probably went wrong in the earlier stages.
-        ret="$?"
-        notify "Failed to $mode $preposition $name" 1
-        return "$ret"
-    fi
-
     notify "Attempting to $mode $preposition $name"
 
     while (( retries-- )); do
+        printf 'power on\n%s %s\n' "$mode" "$mac" | _bluetoothctl
         if printf 'info %s\n' "$mac" |
             _bluetoothctl |
             grep -Pq '^[\t ]+Connected: '"$expected_to_connect"; then
